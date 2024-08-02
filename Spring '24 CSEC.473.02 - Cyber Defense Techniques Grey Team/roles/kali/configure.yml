@@ -1,0 +1,163 @@
+---
+- name: red-kali-configure
+  hosts: red_kali
+  become: yes
+  vars_files:
+    - ./vars.yml
+  environment:
+    ANSIBLE_HOST_KEY_CHECKING: "False" 
+  
+  tasks:
+    # Set hostnames
+    - name: Set a hostname
+      ansible.builtin.hostname:
+        name: "{{ instances[item].hostname }}"
+      when: ansible_host == "{{ instances[item].ip }}"
+      loop: "{{ instances.keys() }}"
+      tags:
+        - hostname
+
+    - name: Replace a localhost entry with our own
+      ansible.builtin.lineinfile:
+        path: /etc/hosts
+        regexp: '^127\.0\.1\.1'
+        line: '127.0.1.1       {{ instances[item].hostname }}'
+        owner: root
+        group: root
+        mode: '0644'
+      when: ansible_host == "{{ instances[item].ip }}"
+      loop: "{{ instances.keys() }}"
+      tags:
+        - hostname
+
+    # install nginx
+    - name: Install nginx
+      apt:
+        name: nginx
+        state: present
+        update_cache: yes
+      tags:
+        - apps
+
+    # Install python3 
+    - name: Install python3
+      apt:
+        name: python3
+        state: present
+        update_cache: yes
+      tags:
+        - apps
+
+    # Install pip
+    - name: Install pip
+      apt:
+        name: python3-pip
+        state: present
+        update_cache: yes
+      tags:
+        - apps
+
+    # Install flask
+    - name: Install flask
+      ansible.builtin.shell: pip install flask
+      tags:
+        - apps
+
+    # Install fabric
+    - name: Install fabric
+      ansible.builtin.shell: pip install fabric
+      tags:
+        - apps
+
+    # Install metasploit
+    - name: Install metasploit
+      apt:
+        name: metasploit-framework
+        state: present
+        update_cache: yes
+      tags:
+        - apps
+
+    # Install powershell-empire
+    - name: Install powershell-empire
+      apt:
+        name: powershell-empire
+        state: present
+        update_cache: yes
+      tags:
+        - apps
+
+    # Install RustDesk 
+    - name: Install wget
+      apt:
+        name: wget
+        state: present
+        update_cache: yes
+      tags:
+        - rustdesk-install
+        - apps
+
+    - name: wget rustdesk
+      ansible.builtin.shell: wget https://github.com/rustdesk/rustdesk/releases/download/1.2.3/rustdesk-1.2.3-x86_64.deb
+      tags:
+        - rustdesk-install
+
+    - name: update cache
+      ansible.builtin.shell: apt-get update --fix-missing
+      tags:
+        - rustdesk-install
+
+    - name: fix broxen
+      ansible.builtin.shell: apt --fix-broken install -y
+      tags:
+        - rustdesk-install
+
+    - name: install
+      ansible.builtin.shell: sudo apt install ./rustdesk-1.2.3-x86_64.deb -y
+      tags:
+        - rustdesk-install
+    
+    - name: remove package
+      ansible.builtin.shell: rm rustdesk*
+      tags: 
+        - rustdesk-install
+   
+    - name: start
+      ansible.builtin.shell: systemctl start rustdesk.service
+      tags: 
+        - rustdesk-install
+        - rustdesk-start
+    
+    - name: enable
+      ansible.builtin.shell: systemctl enable rustdesk.service
+      tags: 
+        - rustdesk-install
+        - rustdesk-start
+
+    # configure rustdesk
+    - name: configure rustdesk
+      ansible.builtin.shell: rustdesk --config 9JiI6ISeltmIsIiI6ISawFmIsICOzEjLzMjLxIjL5ITMiojI5FGblJnIsICOzEjLzMjLxIjL5ITMiojI0N3boJye
+      tags: 
+        - rustdesk-install
+        - rustdesk-start
+
+    - name: set password
+      ansible.builtin.shell: rustdesk --password Password1!
+      tags: 
+        - rustdesk-install
+        - rustdesk-start
+
+    - name: Rustdesk ID
+      shell:
+        cmd: "rustdesk --get-id"
+      register: rustdesk_id
+      tags: 
+        - rustdesk-install
+        - rustdesk-start
+
+    - name: Output ID
+      debug:
+        ID: "{{ rustdesk_id.stdout }}"
+        tags: 
+        - rustdesk-install
+        - rustdesk-start

@@ -1,0 +1,35 @@
+---
+- name: red-kali-deploy
+  hosts: localhost
+  vars_files:
+    - ./vars.yml
+  environment:
+    ANSIBLE_HOST_KEY_CHECKING: "False"
+
+  tasks:
+    - name: Get Networks Info
+      command:
+        cmd: "openstack network list -f json -c ID -c Name"
+      register: networks_info
+
+    - name: Convert JSON array to dictionary
+      set_fact:
+        networks: "{{ networks | default({}) | combine({item.Name: {'id': item.ID}}) }}"
+      loop: "{{ networks_info.stdout | from_json }}"
+
+    # Create new instances
+    - name: Red Kali Boxes
+      command: >
+        openstack server create
+        --flavor large
+        --image Kali-2023.1
+        --boot-from-volume 100
+        --user-data ./userdata.sh
+        --nic net-id={{ networks['red_net'].id }},v4-fixed-ip="{{ instances[item].ip }}"
+        --nic net-id={{ networks['rustdesk_net'].id }}
+        --key-name "Control Node"
+        "Red Kali{{ instances[item].number }} ({{ instances[item].hostname }})"
+      ignore_errors: yes
+      loop: "{{ instances.keys() }}"
+
+

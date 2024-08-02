@@ -1,0 +1,59 @@
+---
+# vars for linux standards
+instances:
+  falcon01:
+    team: "01"
+    ip: 192.168.1.20
+    hostname: "falcon.team01"
+  discovery01:
+    team: "01"
+    ip: 192.168.1.40
+    hostname: "discovery.team01"
+  mercury01:
+    team: "01"
+    ip: 10.0.1.10
+    hostname: "mercury.team01"
+  satellite01:
+    team: "01"
+    ip: 172.128.1.10
+    hostname: "dwayneinator.team01"
+
+  falcon02:
+    team: "02"
+    ip: 192.168.2.20
+    hostname: "falcon.team02"
+  discovery02:
+    team: "02"
+    ip: 192.168.2.40
+    hostname: "discovery.team02"
+  mercury02:
+    team: "02"
+    ip: 10.0.2.10
+    hostname: "mercury.team02"
+  satellite02:
+    team: "02"
+    ip: 172.128.2.10
+    hostname: "dwayneinator.team02"
+
+localusers:
+  Galilei:
+  Hawking:
+  Kuiper:
+  Halley:
+  Michell:
+  Leavitt:
+  Moore:
+
+adusers:
+  Armstrong:
+  Aldrin:
+  McAuliffe:
+  Gagarin:
+  Hadfield:
+  Glenn:
+  Shepard:
+  Ride:
+  Kelly:
+  Ochoa:
+
+adpassword: P@ssw0rd!

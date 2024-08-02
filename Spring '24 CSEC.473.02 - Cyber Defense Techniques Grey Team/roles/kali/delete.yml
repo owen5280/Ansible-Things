@@ -1,0 +1,18 @@
+---
+- name: red-kali-delete
+  hosts: localhost
+  vars_files:
+    - ./vars.yml
+  environment:
+    ANSIBLE_HOST_KEY_CHECKING: "False"
+
+  tasks:
+    - name: Delete Kali Images
+      command: >
+        openstack server delete "Red Kali{{ instances[item].number }} ({{ instances[item].hostname }})"
+      ignore_errors: yes
+      loop: "{{ instances.keys() }}"
+
+    - name: Wait for instances to delete
+      ansible.builtin.pause:
+        seconds: 15

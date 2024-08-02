@@ -1,0 +1,209 @@
+---
+- name: linux standards
+  hosts: linux
+  become: yes
+  vars_files:
+    - ./vars.yml
+  
+  tasks:
+    # Set hostnames
+    - name: Set a hostname
+      ansible.builtin.hostname:
+        name: "{{ instances[item].hostname }}"
+      when: ansible_host == instances[item].ip
+      loop: "{{ instances.keys() }}"
+      tags:
+        - hostname
+
+    - name: Replace a localhost entry with our own
+      ansible.builtin.lineinfile:
+        path: /etc/hosts
+        regexp: '^127\.0\.1\.1'
+        line: "127.0.1.1       {{ instances[item].hostname }}"
+        owner: root
+        group: root
+        mode: '0644'
+      when: ansible_host == instances[item].ip
+      loop: "{{ instances.keys() }}"
+      tags:
+        - hostname
+
+    # add local users
+    - name: Add local users
+      user:
+        name: "{{ item }}"
+        shell: "/bin/bash"
+        password: "{{ 'P@ssw0rd!' | password_hash('sha512') }}"
+      loop: "{{ localusers.keys() }}"
+      tags:
+        - users
+
+    - name: Galilei
+      ansible.builtin.shell: usermod -aG sudo Galilei  
+      tags:
+        - users
+
+    - name: Hawking
+      ansible.builtin.shell: usermod -aG sudo Hawking
+      tags:
+        - users
+  
+    # clear current dns
+    - name: remove /etc/resolv.conf
+      ansible.builtin.lineinfile:
+        path: /etc/resolv.conf
+        state: absent
+      tags:
+        - team1-dns
+        - team2-dns
+        - dns
+
+    - name: Install required packages
+      package:
+        name:
+          - realmd
+          - sssd
+          - sssd-tools
+          - libnss-sss
+          - libpam-sss
+          - adcli
+        state: present
+      tags:
+        - team1-dns
+        - team2-dns
+        - dns
+
+- name: dns team1
+  hosts: team1
+  become: yes
+  vars_files:
+    - ./vars.yml
+  # gather_facts: no
+
+  tasks:
+    # set dns
+    - name: Add DNS servers to /etc/resolv.conf
+      ansible.builtin.lineinfile:
+        path: /etc/resolv.conf
+        line: "nameserver 192.168.1.10\nnameserver 129.21.3.17"
+        state: present
+        insertafter: EOF
+        create: yes
+      tags:
+        - team1-dns
+        - dns
+
+    # add domain users  
+    - name: Join the AD domain
+      ansible.builtin.shell: echo "P@ssw0rd!" | sudo realm join --user=Armstrong space.01.com
+      tags:
+        - team1-dns
+        - dns
+
+- name: dns team2
+  hosts: team2
+  become: yes
+  vars_files:
+    - ./vars.yml
+  # gather_facts: no
+  
+  tasks:
+    # set dns
+    - name: Add DNS servers to /etc/resolv.conf
+      ansible.builtin.lineinfile:
+        path: /etc/resolv.conf
+        line: "nameserver 192.168.2.10\nnameserver 129.21.3.17"
+        state: present
+        insertafter: EOF
+        create: yes
+      tags:
+        - team2-dns
+        - dns
+
+    # add domain users  
+    - name: Join the AD domain
+      ansible.builtin.shell: echo "P@ssw0rd!" | sudo realm join --user=Armstrong space.02.com
+      tags:
+        - team2-dns
+        - dns
+  
+- name: rustdesk ubuntu
+  hosts: ubuntu
+  become: yes
+  vars_files:
+    - ./vars.yml
+ 
+  tasks:
+    # Install RustDesk 
+    - name: Install wget
+      apt:
+        name: wget
+        state: present
+        update_cache: yes
+      tags:
+        - rustdesk-install
+
+    - name: wget rustdesk
+      ansible.builtin.shell: wget https://github.com/rustdesk/rustdesk/releases/download/1.2.3/rustdesk-1.2.3-x86_64.deb
+      tags:
+        - rustdesk-install
+
+    - name: update cache
+      ansible.builtin.shell: apt-get update --fix-missing
+      tags:
+        - rustdesk-install
+
+    - name: fix broxen
+      ansible.builtin.shell: apt --fix-broken install -y
+      tags:
+        - rustdesk-install
+
+    - name: install
+      ansible.builtin.shell: sudo apt install ./rustdesk-1.2.3-x86_64.deb -y
+      tags:
+        - rustdesk-install
+    
+    - name: remove package
+      ansible.builtin.shell: rm rustdesk*
+      tags: 
+        - rustdesk-install
+   
+    - name: start
+      ansible.builtin.shell: systemctl start rustdesk.service
+      tags: 
+        - rustdesk-install
+        - rustdesk-start
+    
+    - name: enable
+      ansible.builtin.shell: systemctl enable rustdesk.service
+      tags: 
+        - rustdesk-install
+        - rustdesk-start
+
+    # configure rustdesk
+    - name: configure rustdesk
+      ansible.builtin.shell: rustdesk --config 9JiI6ISeltmIsIiI6ISawFmIsICOzEjLzMjLxIjL5ITMiojI5FGblJnIsICOzEjLzMjLxIjL5ITMiojI0N3boJye
+      tags: 
+        - rustdesk-install
+        - rustdesk-start
+
+    - name: set password
+      ansible.builtin.shell: rustdesk --password Password1!
+      tags: 
+        - rustdesk-install
+        - rustdesk-start
+
+    - name: Rustdesk ID
+      shell:
+        cmd: "rustdesk --get-id"
+      register: rustdesk_id
+      tags: 
+        - rustdesk-install
+        - rustdesk-start
+
+    - name: Output ID
+      debug:
+        ID: "{{ rustdesk_id.stdout }}"
+        tags: 
+        - rustdesk-install
+        - rustdesk-start

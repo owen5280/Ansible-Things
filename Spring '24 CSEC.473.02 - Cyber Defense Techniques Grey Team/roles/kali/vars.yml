@@ -1,0 +1,43 @@
+---
+# vars for red-kali
+instances:
+  metis:
+    ip: 88.31.10.11
+    hostname: Metis
+    number: "01"
+  adrastea:
+    ip: 88.31.10.12
+    hostname: Adrastea
+    number: "02"
+  amalthea:
+    ip: 88.31.10.13
+    hostname: Amalthea
+    number: "03"
+  thebe:
+    ip: 88.31.10.14
+    hostname: Thebe
+    number: "04"
+  io:
+    ip: 88.31.10.15
+    hostname: Io
+    number: "05"
+  europa:
+    ip: 88.31.10.16
+    hostname: Europa
+    number: "06"
+  ganymede:
+    ip: 88.31.10.17
+    hostname: Ganymede
+    number: "07"
+  callisto:
+    ip: 88.31.10.18
+    hostname: Callisto
+    number: "08"
+  themisto:
+    ip: 88.31.10.19
+    hostname: Themisto
+    number: "09"
+  leda:
+    ip: 88.31.10.20
+    hostname: Leda 
+    number: "10"
